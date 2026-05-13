@@ -23,14 +23,6 @@
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
   --radius: 0.5rem;
-
-  /* Enterprise brand tokens */
-  --brand-deep: #072C2C;
-  --brand-signal: #FF5F03;
-  --brand-surface: #EDEADE;
-  --status-ok: #16A34A;
-  --status-warn: #D97706;
-  --status-danger: #DC2626;
 }
 
 @theme inline {
@@ -57,8 +49,6 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --font-sans: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-oswald), Georgia, serif;
 }
 
 @layer base {
@@ -68,11 +58,11 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
+    font-family: 'Ubuntu', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
-  .font-display {
-    font-family: var(--font-oswald), Georgia, serif;
-    letter-spacing: 0.01em;
+  h1, h2, h3, .display {
+    font-family: 'Oswald', Georgia, serif;
+    letter-spacing: 0.04em;
   }
 }
