@@ -22,29 +22,15 @@
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
   --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
-}
+  --radius: 0.5rem;
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.556 0 0);
+  /* Enterprise brand tokens */
+  --brand-deep: #072C2C;
+  --brand-signal: #FF5F03;
+  --brand-surface: #EDEADE;
+  --status-ok: #16A34A;
+  --status-warn: #D97706;
+  --status-danger: #DC2626;
 }
 
 @theme inline {
@@ -71,6 +57,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  --font-sans: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-oswald), Georgia, serif;
 }
 
 @layer base {
@@ -80,6 +68,11 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
+    font-family: var(--font-ubuntu), ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  .font-display {
+    font-family: var(--font-oswald), Georgia, serif;
+    letter-spacing: 0.01em;
   }
 }

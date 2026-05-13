@@ -1,11 +1,25 @@
 import type { Metadata } from "next";
-
-import { Toaster } from "@/components/providers/toaster";
+import { Ubuntu, Oswald } from "next/font/google";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
+const ubuntu = Ubuntu({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "700"],
+  variable: "--font-ubuntu",
+  display: "swap",
+});
+
+const oswald = Oswald({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-oswald",
+  display: "swap",
+});
+
 export const metadata: Metadata = {
-  title: "Baljia App",
-  description: "Built with Baljia AI",
+  title: "VendorShield — Vendor Compliance Portal",
+  description: "Onboard vendors, track compliance documents, and manage approvals in one place.",
 };
 
 export default function RootLayout({
@@ -14,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className="min-h-screen bg-background text-foreground antialiased">
+    <html lang="en" className={`${ubuntu.variable} ${oswald.variable}`}>
+      <body className="font-sans antialiased">
         {children}
         <Toaster />
       </body>
