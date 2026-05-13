@@ -29,7 +29,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${ubuntu.variable} ${oswald.variable}`}>
-      <body className="font-sans antialiased">
+      <body
+        className="antialiased"
+        style={{ fontFamily: "var(--font-ubuntu, ui-sans-serif, system-ui, sans-serif)" }}
+      >
         {children}
         <Toaster />
       </body>
