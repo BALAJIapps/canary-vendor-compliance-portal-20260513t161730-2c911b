@@ -91,39 +91,93 @@ function NotifTypeLabel({ type }: { type: string }) {
   return <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{map[type] ?? type}</span>;
 }
 
-/* Compliance health bar — distinctive element */
+/* ── Distinctive: SVG Compliance Score Ring ── */
+function ComplianceScoreRing({ score }: { score: number }) {
+  const r = 28;
+  const circ = 2 * Math.PI * r;
+  const filled = (score / 100) * circ;
+  const color = score >= 80 ? "#16A34A" : score >= 50 ? "#D97706" : "#DC2626";
+  return (
+    <svg width="72" height="72" viewBox="0 0 72 72" className="shrink-0">
+      <circle cx="36" cy="36" r={r} fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="6" />
+      <circle
+        cx="36" cy="36" r={r}
+        fill="none"
+        stroke={color}
+        strokeWidth="6"
+        strokeDasharray={`${filled} ${circ - filled}`}
+        strokeDashoffset={circ / 4}
+        strokeLinecap="round"
+        style={{ transition: "stroke-dasharray 0.8s ease" }}
+      />
+      <text x="36" y="40" textAnchor="middle" fill="white" fontSize="14" fontWeight="700"
+        style={{ fontFamily: "var(--font-oswald, Georgia, serif)" }}>
+        {score}%
+      </text>
+    </svg>
+  );
+}
+
+/* ── Distinctive: Compliance Health Banner ── */
 function ComplianceHealthBar({ metrics }: { metrics: Metrics | null }) {
   if (!metrics || metrics.totalVendors === 0) return null;
-  const approvalRate = Math.round((metrics.approvedVendors / metrics.totalVendors) * 100);
+  const score = Math.round((metrics.approvedVendors / metrics.totalVendors) * 100);
   const pendingRate = Math.round((metrics.pendingVendors / metrics.totalVendors) * 100);
-  const rejectedRate = 100 - approvalRate - pendingRate;
-
-  let healthLabel = "At Risk";
-  let healthColor = "text-[#DC2626]";
-  if (approvalRate >= 80) { healthLabel = "Healthy"; healthColor = "text-[#16A34A]"; }
-  else if (approvalRate >= 50) { healthLabel = "Moderate"; healthColor = "text-[#D97706]"; }
+  const rejectedRate = 100 - score - pendingRate;
+  const label = score >= 80 ? "Portfolio Healthy" : score >= 50 ? "Needs Attention" : "At Risk";
 
   return (
-    <div className="bg-[#072C2C] text-white rounded-sm px-6 py-5 mb-6">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-4 w-4 text-[#FF5F03]" />
-          <span className="text-sm font-medium tracking-wide uppercase" style={{fontFamily: "var(--font-oswald, Georgia, serif)"}}>
-            Portfolio Compliance Health
+    <div className="rounded-sm px-6 py-5 mb-6 flex items-center gap-6" style={{ backgroundColor: "#072C2C" }}>
+      <ComplianceScoreRing score={score} />
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 mb-2">
+          <TrendingUp className="h-4 w-4" style={{ color: "#FF5F03" }} />
+          <span className="text-sm font-semibold text-white tracking-widest uppercase"
+            style={{ fontFamily: "var(--font-oswald, Georgia, serif)", letterSpacing: "0.1em" }}>
+            {label}
           </span>
         </div>
-        <span className={`text-sm font-bold ${healthColor}`}>{healthLabel} — {approvalRate}% approved</span>
+        <div className="flex h-2 rounded-full overflow-hidden gap-px">
+          <div className="transition-all duration-700" style={{ width: `${score}%`, backgroundColor: "#16A34A" }} />
+          <div className="transition-all duration-700" style={{ width: `${pendingRate}%`, backgroundColor: "#D97706" }} />
+          {rejectedRate > 0 && <div className="transition-all duration-700" style={{ width: `${rejectedRate}%`, backgroundColor: "#DC2626" }} />}
+        </div>
+        <div className="flex gap-5 mt-2 text-xs" style={{ color: "rgba(255,255,255,0.5)" }}>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: "#16A34A" }} />
+            {metrics.approvedVendors} approved
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: "#D97706" }} />
+            {metrics.pendingVendors} pending
+          </span>
+          {metrics.rejectedVendors > 0 && (
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ backgroundColor: "#DC2626" }} />
+              {metrics.rejectedVendors} rejected
+            </span>
+          )}
+        </div>
       </div>
-      <div className="flex h-2 rounded-full overflow-hidden gap-0.5">
-        <div className="bg-[#16A34A] transition-all duration-500" style={{width: `${approvalRate}%`}} />
-        <div className="bg-[#D97706] transition-all duration-500" style={{width: `${pendingRate}%`}} />
-        {rejectedRate > 0 && <div className="bg-[#DC2626] transition-all duration-500" style={{width: `${rejectedRate}%`}} />}
+      <div className="hidden md:flex flex-col items-end gap-1 shrink-0">
+        <span className="text-[10px] uppercase tracking-widest" style={{ color: "rgba(255,255,255,0.4)" }}>Documents on file</span>
+        <span className="text-3xl font-bold text-white" style={{ fontFamily: "var(--font-oswald, Georgia, serif)" }}>
+          {metrics.totalDocuments}
+        </span>
       </div>
-      <div className="flex gap-4 mt-2 text-xs text-white/60">
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#16A34A] inline-block" />Approved {metrics.approvedVendors}</span>
-        <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#D97706] inline-block" />Pending {metrics.pendingVendors}</span>
-        {metrics.rejectedVendors > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#DC2626] inline-block" />Rejected {metrics.rejectedVendors}</span>}
+    </div>
+  );
+}
+
+/* ── Branded empty state ── */
+function EmptyState({ icon: Icon, title, subtitle }: { icon: React.ElementType; title: string; subtitle: string }) {
+  return (
+    <div className="py-12 flex flex-col items-center gap-3">
+      <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ backgroundColor: "#EDEADE" }}>
+        <Icon className="h-5 w-5" style={{ color: "#072C2C", opacity: 0.5 }} />
       </div>
+      <p className="text-sm font-medium" style={{ color: "#111827" }}>{title}</p>
+      <p className="text-xs text-muted-foreground max-w-xs text-center">{subtitle}</p>
     </div>
   );
 }
@@ -256,25 +310,26 @@ export default function CompliancePortal() {
   const pendingCount = vendors.filter(v => v.status === "pending").length;
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: "#EDEADE"}}>
+    <div className="min-h-screen" style={{ backgroundColor: "#EDEADE" }}>
       {/* Header */}
-      <header className="border-b" style={{backgroundColor: "#072C2C"}}>
+      <header className="border-b" style={{ backgroundColor: "#072C2C" }}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
-            <Shield className="h-6 w-6" style={{color: "#FF5F03"}} />
+            <Shield className="h-6 w-6" style={{ color: "#FF5F03" }} />
             <div>
               <span
-                className="text-xl font-display text-white tracking-wide"
-                style={{fontFamily: "var(--font-oswald, Georgia, serif)", letterSpacing: "0.04em"}}
+                className="text-xl text-white tracking-widest"
+                style={{ fontFamily: "var(--font-oswald, Georgia, serif)", fontWeight: 600, letterSpacing: "0.12em" }}
               >
                 VENDORSHIELD
               </span>
-              <span className="ml-3 text-xs text-white/50 font-normal">Compliance Portal</span>
+              <span className="ml-3 text-xs font-normal" style={{ color: "rgba(255,255,255,0.4)" }}>Compliance Portal</span>
             </div>
           </div>
           <div className="flex items-center gap-3">
             {pendingCount > 0 && (
-              <span className="flex items-center gap-1.5 text-xs text-[#D97706] bg-[#D97706]/10 border border-[#D97706]/30 px-2.5 py-1 rounded-full">
+              <span className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border"
+                style={{ color: "#D97706", backgroundColor: "rgba(217,119,6,0.1)", borderColor: "rgba(217,119,6,0.3)" }}>
                 <AlertTriangle className="h-3 w-3" />
                 {pendingCount} awaiting review
               </span>
@@ -283,7 +338,8 @@ export default function CompliancePortal() {
               variant="ghost"
               size="sm"
               onClick={fetchAll}
-              className="text-white/70 hover:text-white hover:bg-white/10 border border-white/20"
+              className="border"
+              style={{ color: "rgba(255,255,255,0.7)", borderColor: "rgba(255,255,255,0.2)" }}
             >
               <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
               Refresh
@@ -294,36 +350,31 @@ export default function CompliancePortal() {
 
       <div className="mx-auto max-w-7xl px-6 py-8 space-y-6">
 
-        {/* Compliance Health Bar — distinctive element */}
+        {/* Compliance Health Banner — distinctive SVG ring + stacked bar */}
         <ComplianceHealthBar metrics={metrics} />
 
         {/* Dashboard Metrics */}
         <section aria-label="Dashboard metrics">
           <div className="flex items-center gap-2 mb-3">
-            <LayoutDashboard className="h-4 w-4" style={{color: "#072C2C"}} />
-            <h2
-              className="text-base font-semibold uppercase tracking-widest"
-              style={{color: "#072C2C", fontFamily: "var(--font-oswald, Georgia, serif)", letterSpacing: "0.08em"}}
-            >
+            <LayoutDashboard className="h-4 w-4" style={{ color: "#072C2C" }} />
+            <h2 className="text-base font-semibold uppercase"
+              style={{ color: "#072C2C", fontFamily: "var(--font-oswald, Georgia, serif)", letterSpacing: "0.1em" }}>
               Live Metrics
             </h2>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
             {[
-              { label: "Total", value: metrics?.totalVendors ?? "—", icon: Building2, style: {color: "#111827"} },
-              { label: "Pending", value: metrics?.pendingVendors ?? "—", icon: Clock, style: {color: "#D97706"} },
-              { label: "Approved", value: metrics?.approvedVendors ?? "—", icon: CheckCircle2, style: {color: "#16A34A"} },
-              { label: "Rejected", value: metrics?.rejectedVendors ?? "—", icon: XCircle, style: {color: "#DC2626"} },
-              { label: "Documents", value: metrics?.totalDocuments ?? "—", icon: FileText, style: {color: "#111827"} },
-              { label: "Alerts", value: metrics?.totalNotifications ?? "—", icon: Bell, style: {color: "#FF5F03"} },
-            ].map(({ label, value, icon: Icon, style: iconStyle }) => (
+              { label: "Total", value: metrics?.totalVendors ?? "—", colorStyle: { color: "#111827" } },
+              { label: "Pending", value: metrics?.pendingVendors ?? "—", colorStyle: { color: "#D97706" } },
+              { label: "Approved", value: metrics?.approvedVendors ?? "—", colorStyle: { color: "#16A34A" } },
+              { label: "Rejected", value: metrics?.rejectedVendors ?? "—", colorStyle: { color: "#DC2626" } },
+              { label: "Documents", value: metrics?.totalDocuments ?? "—", colorStyle: { color: "#111827" } },
+              { label: "Alerts", value: metrics?.totalNotifications ?? "—", colorStyle: { color: "#FF5F03" } },
+            ].map(({ label, value, colorStyle }) => (
               <Card key={label} className="bg-white border-border shadow-none">
                 <CardContent className="pt-3 pb-3 px-4">
-                  <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mb-1">{label}</p>
-                  <div className="flex items-end justify-between">
-                    <p className="text-2xl font-bold" style={iconStyle}>{loading ? "…" : value}</p>
-                    <Icon className="h-4 w-4 mb-0.5 opacity-40" style={iconStyle} />
-                  </div>
+                  <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">{label}</p>
+                  <p className="text-2xl font-bold" style={colorStyle}>{loading ? "…" : value}</p>
                 </CardContent>
               </Card>
             ))}
@@ -345,7 +396,7 @@ export default function CompliancePortal() {
               <UserCheck className="h-3.5 w-3.5 mr-1.5" />
               Admin Approvals
               {pendingCount > 0 && (
-                <span className="ml-1.5 bg-[#D97706] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full">{pendingCount}</span>
+                <span className="ml-1.5 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: "#D97706" }}>{pendingCount}</span>
               )}
             </TabsTrigger>
             <TabsTrigger value="notifications" className="data-[state=active]:bg-[#072C2C] data-[state=active]:text-white text-sm">
@@ -354,13 +405,13 @@ export default function CompliancePortal() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Onboarding tab */}
+          {/* Onboarding */}
           <TabsContent value="onboard" className="mt-5">
             <div className="grid md:grid-cols-[2fr_3fr] gap-5">
               <Card className="bg-white border-border shadow-none">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold" style={{color: "#072C2C"}}>Register New Vendor</CardTitle>
-                  <p className="text-xs text-muted-foreground">Submit vendor details to begin the compliance review process.</p>
+                  <CardTitle className="text-sm font-semibold" style={{ color: "#072C2C" }}>Register New Vendor</CardTitle>
+                  <p className="text-xs text-muted-foreground">Submit vendor details to begin the compliance review.</p>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={submitVendor} className="space-y-3">
@@ -383,7 +434,7 @@ export default function CompliancePortal() {
                     {vMsg && (
                       <p className={`text-xs font-medium ${vMsg.includes("success") ? "text-[#16A34A]" : "text-[#DC2626]"}`}>{vMsg}</p>
                     )}
-                    <Button type="submit" disabled={vSubmitting} className="w-full h-8 text-sm" style={{backgroundColor: "#072C2C", color: "white"}}>
+                    <Button type="submit" disabled={vSubmitting} className="w-full h-8 text-sm" style={{ backgroundColor: "#072C2C", color: "white" }}>
                       {vSubmitting ? "Registering…" : "Register Vendor"}
                       <ChevronRight className="ml-1 h-3.5 w-3.5" />
                     </Button>
@@ -392,24 +443,20 @@ export default function CompliancePortal() {
               </Card>
               <Card className="bg-white border-border shadow-none">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold" style={{color: "#072C2C"}}>
+                  <CardTitle className="text-sm font-semibold" style={{ color: "#072C2C" }}>
                     Registered Vendors
                     <span className="ml-2 text-xs font-normal text-muted-foreground">({vendors.length} total)</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {vendors.length === 0 ? (
-                    <div className="py-10 text-center">
-                      <Building2 className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-40" />
-                      <p className="text-sm text-muted-foreground">No vendors registered yet.</p>
-                      <p className="text-xs text-muted-foreground mt-1">Use the form to onboard your first vendor.</p>
-                    </div>
+                    <EmptyState icon={Building2} title="No vendors yet" subtitle="Register your first vendor using the form to begin the compliance workflow." />
                   ) : (
                     <div className="divide-y divide-border">
                       {vendors.map((v) => (
                         <div key={v.id} className="py-2.5 flex items-center justify-between gap-3">
                           <div className="min-w-0">
-                            <p className="font-medium text-sm truncate" style={{color: "#111827"}}>{v.companyName}</p>
+                            <p className="font-medium text-sm truncate" style={{ color: "#111827" }}>{v.companyName}</p>
                             <p className="text-xs text-muted-foreground">{v.contactEmail} · <span className="italic">{v.category}</span></p>
                           </div>
                           <StatusBadge status={v.status} />
@@ -422,12 +469,12 @@ export default function CompliancePortal() {
             </div>
           </TabsContent>
 
-          {/* Documents tab */}
+          {/* Documents */}
           <TabsContent value="documents" className="mt-5">
             <div className="grid md:grid-cols-[2fr_3fr] gap-5">
               <Card className="bg-white border-border shadow-none">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold" style={{color: "#072C2C"}}>Record Compliance Document</CardTitle>
+                  <CardTitle className="text-sm font-semibold" style={{ color: "#072C2C" }}>Record Compliance Document</CardTitle>
                   <p className="text-xs text-muted-foreground">Log a document submission against a registered vendor.</p>
                 </CardHeader>
                 <CardContent>
@@ -450,7 +497,7 @@ export default function CompliancePortal() {
                     {dMsg && (
                       <p className={`text-xs font-medium ${dMsg.includes("success") ? "text-[#16A34A]" : "text-[#DC2626]"}`}>{dMsg}</p>
                     )}
-                    <Button type="submit" disabled={dSubmitting} className="w-full h-8 text-sm" style={{backgroundColor: "#072C2C", color: "white"}}>
+                    <Button type="submit" disabled={dSubmitting} className="w-full h-8 text-sm" style={{ backgroundColor: "#072C2C", color: "white" }}>
                       {dSubmitting ? "Recording…" : "Record Document"}
                       <Upload className="ml-1 h-3.5 w-3.5" />
                     </Button>
@@ -459,17 +506,14 @@ export default function CompliancePortal() {
               </Card>
               <Card className="bg-white border-border shadow-none">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-semibold" style={{color: "#072C2C"}}>
+                  <CardTitle className="text-sm font-semibold" style={{ color: "#072C2C" }}>
                     Document Records
                     <span className="ml-2 text-xs font-normal text-muted-foreground">({documents.length})</span>
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   {documents.length === 0 ? (
-                    <div className="py-10 text-center">
-                      <FileText className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-40" />
-                      <p className="text-sm text-muted-foreground">No documents recorded yet.</p>
-                    </div>
+                    <EmptyState icon={FileText} title="No documents recorded" subtitle="Record your first compliance document to start building the vendor's file." />
                   ) : (
                     <div className="divide-y divide-border">
                       {documents.map((d) => {
@@ -477,7 +521,7 @@ export default function CompliancePortal() {
                         return (
                           <div key={d.id} className="py-2.5 flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                              <p className="font-medium text-sm truncate" style={{color: "#111827"}}>{d.documentName}</p>
+                              <p className="font-medium text-sm truncate" style={{ color: "#111827" }}>{d.documentName}</p>
                               <p className="text-xs text-muted-foreground">{vendor?.companyName ?? "Unknown"} · {new Date(d.uploadedAt).toLocaleDateString()}</p>
                             </div>
                             <Badge variant="outline" className="text-[11px] shrink-0">{d.documentType}</Badge>
@@ -491,24 +535,21 @@ export default function CompliancePortal() {
             </div>
           </TabsContent>
 
-          {/* Admin Approvals tab */}
+          {/* Admin Approvals */}
           <TabsContent value="approvals" className="mt-5">
             {approvalMsg && (
               <p className={`mb-3 text-xs font-medium px-3 py-2 rounded ${approvalMsg.includes("success") ? "bg-[#16A34A]/10 text-[#16A34A]" : "bg-[#DC2626]/10 text-[#DC2626]"}`}>{approvalMsg}</p>
             )}
             <Card className="bg-white border-border shadow-none">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{color: "#072C2C"}}>
+                <CardTitle className="text-sm font-semibold" style={{ color: "#072C2C" }}>
                   Admin Approval Queue
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">Review vendor applications and set status</span>
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">Review applications and set compliance status</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {vendors.length === 0 ? (
-                  <div className="py-10 text-center">
-                    <UserCheck className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-40" />
-                    <p className="text-sm text-muted-foreground">No vendors to review yet.</p>
-                  </div>
+                  <EmptyState icon={UserCheck} title="No vendors to review" subtitle="Register a vendor first to begin the approval workflow." />
                 ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -527,13 +568,13 @@ export default function CompliancePortal() {
                         {vendors.map((v) => (
                           <tr key={v.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                             <td className="py-3 pr-4">
-                              <p className="font-medium" style={{color: "#111827"}}>{v.companyName}</p>
+                              <p className="font-medium" style={{ color: "#111827" }}>{v.companyName}</p>
                               <p className="text-xs text-muted-foreground">{v.contactEmail}</p>
                             </td>
                             <td className="py-3 pr-4 text-xs text-muted-foreground">{v.category}</td>
                             <td className="py-3 pr-4"><StatusBadge status={v.status} /></td>
                             <td className="py-3 pr-4 text-center">
-                              <span className="font-bold text-sm" style={{color: "#111827"}}>{docCount(v.id)}</span>
+                              <span className="font-bold text-sm" style={{ color: "#111827" }}>{docCount(v.id)}</span>
                             </td>
                             <td className="py-3 pr-4 max-w-[180px]">
                               {v.status !== "pending" ? (
@@ -576,22 +617,18 @@ export default function CompliancePortal() {
             </Card>
           </TabsContent>
 
-          {/* Notifications tab */}
+          {/* Notifications */}
           <TabsContent value="notifications" className="mt-5">
             <Card className="bg-white border-border shadow-none">
               <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold" style={{color: "#072C2C"}}>
+                <CardTitle className="text-sm font-semibold" style={{ color: "#072C2C" }}>
                   Notification Audit Trail
-                  <span className="ml-2 text-xs font-normal text-muted-foreground">({notifications.length} events recorded)</span>
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">({notifications.length} events)</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 {notifications.length === 0 ? (
-                  <div className="py-10 text-center">
-                    <Bell className="h-8 w-8 mx-auto mb-2 text-muted-foreground opacity-40" />
-                    <p className="text-sm text-muted-foreground">No notifications yet.</p>
-                    <p className="text-xs text-muted-foreground mt-1">Events are recorded automatically when vendors are registered or approved.</p>
-                  </div>
+                  <EmptyState icon={Bell} title="No notifications yet" subtitle="Events are recorded automatically when vendors register, upload documents, or receive approval decisions." />
                 ) : (
                   <div className="divide-y divide-border">
                     {notifications.map((n) => (
@@ -601,14 +638,14 @@ export default function CompliancePortal() {
                           {n.type === "vendor_rejected" && <XCircle className="h-4 w-4 text-[#DC2626]" />}
                           {n.type === "vendor_registered" && <Building2 className="h-4 w-4 text-[#D97706]" />}
                           {n.type === "document_uploaded" && <FileText className="h-4 w-4 text-muted-foreground" />}
-                          {!['vendor_approved','vendor_rejected','vendor_registered','document_uploaded'].includes(n.type) && <Bell className="h-4 w-4 text-muted-foreground" />}
+                          {!["vendor_approved", "vendor_rejected", "vendor_registered", "document_uploaded"].includes(n.type) && <Bell className="h-4 w-4 text-muted-foreground" />}
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-0.5">
                             <NotifTypeLabel type={n.type} />
                             <StatusBadge status={n.status} />
                           </div>
-                          <p className="text-sm" style={{color: "#111827"}}>{n.message}</p>
+                          <p className="text-sm" style={{ color: "#111827" }}>{n.message}</p>
                           <p className="text-xs text-muted-foreground mt-0.5">{new Date(n.createdAt).toLocaleString()}</p>
                         </div>
                       </div>
@@ -621,10 +658,10 @@ export default function CompliancePortal() {
         </Tabs>
       </div>
 
-      <footer className="border-t mt-12" style={{backgroundColor: "#072C2C"}}>
+      <footer className="border-t mt-12" style={{ backgroundColor: "#072C2C" }}>
         <div className="mx-auto max-w-7xl px-6 py-4 flex items-center justify-between">
-          <span className="text-xs text-white/50">VendorShield Compliance Portal</span>
-          <span className="text-xs text-white/40">Onboarding · Documents · Approvals · Audit Trail</span>
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>VendorShield Compliance Portal</span>
+          <span className="text-xs" style={{ color: "rgba(255,255,255,0.3)" }}>Onboarding · Documents · Approvals · Audit Trail</span>
         </div>
       </footer>
     </div>
