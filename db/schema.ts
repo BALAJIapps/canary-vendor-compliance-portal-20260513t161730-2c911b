@@ -77,15 +77,13 @@ export const subscription = pgTable("subscription", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
-/* Webhook idempotency */
 export const stripeEvent = pgTable("stripe_event", {
-  id: text("id").primaryKey(), // Stripe event.id
+  id: text("id").primaryKey(),
   type: text("type").notNull(),
   processedAt: timestamp("processed_at", { withTimezone: true }).notNull().defaultNow(),
   payload: jsonb("payload").notNull(),
 });
 
-/* Example feature table — specialist agents extend/replace this */
 export const todo = pgTable("todo", {
   id: uuid("id").primaryKey().defaultRandom(),
   userId: text("user_id")
@@ -97,7 +95,52 @@ export const todo = pgTable("todo", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* ─────────── Canary: Vendor Compliance Portal tables ─────────── */
+
+export const canaryVendors = pgTable("canary_vendors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  companyName: text("company_name").notNull(),
+  contactName: text("contact_name").notNull(),
+  contactEmail: text("contact_email").notNull(),
+  category: text("category").notNull(),
+  // status: pending | approved | rejected
+  status: text("status").notNull().default("pending"),
+  reviewerNote: text("reviewer_note"),
+  reviewedBy: text("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const canaryVendorDocuments = pgTable("canary_vendor_documents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vendorId: uuid("vendor_id")
+    .notNull()
+    .references(() => canaryVendors.id, { onDelete: "cascade" }),
+  documentName: text("document_name").notNull(),
+  documentType: text("document_type").notNull(),
+  // For canary: store URL or reference; real file stored in R2
+  fileUrl: text("file_url"),
+  mimeType: text("mime_type"),
+  sizeBytes: integer("size_bytes"),
+  uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const canaryNotifications = pgTable("canary_notifications", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  vendorId: uuid("vendor_id")
+    .references(() => canaryVendors.id, { onDelete: "set null" }),
+  type: text("type").notNull(), // vendor_registered | document_uploaded | vendor_approved | vendor_rejected
+  message: text("message").notNull(),
+  // status: pending | sent | failed
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type User = typeof user.$inferSelect;
 export type Session = typeof session.$inferSelect;
 export type Subscription = typeof subscription.$inferSelect;
 export type Todo = typeof todo.$inferSelect;
+export type CanaryVendor = typeof canaryVendors.$inferSelect;
+export type CanaryVendorDocument = typeof canaryVendorDocuments.$inferSelect;
+export type CanaryNotification = typeof canaryNotifications.$inferSelect;
